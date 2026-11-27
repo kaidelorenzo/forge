@@ -332,6 +332,7 @@ export class TabBarComponent extends BaseLitElement implements ITabBarComponent 
     }
     this.#userActivateTab(tab);
     tab.focus();
+    this.#scrollTabIntoView(tab);
   }
 
   #handleActivateKey(evt: KeyboardEvent): void {
@@ -371,7 +372,11 @@ export class TabBarComponent extends BaseLitElement implements ITabBarComponent 
   }
 
   #handleTabFocus(element: HTMLElement): void {
-    this.#scrollTabIntoView(element as TabComponent);
+    // A tab pressed with the pointer is scrolled into view once its click completes. Scrolling as
+    // it's pressed moves it out from under the pointer, so the press never becomes a click.
+    if (element.matches(':focus-visible')) {
+      this.#scrollTabIntoView(element as TabComponent);
+    }
     if (!this.autoActivate) {
       return;
     }

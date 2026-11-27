@@ -708,6 +708,33 @@ describe('Tabs', () => {
       expect(document.activeElement).toBe(input);
     });
 
+    it('should not scroll a tab into view when it is focused by a pointer press', async () => {
+      const ctx = await createFixture({ scrollButtons: true, activeTab: 0, width: '200px' });
+      await ctx.waitForScrollableUpdate(true);
+      await userEvent.click(ctx.tabs[0]);
+      ctx.scrollContainer.scrollLeft = 0;
+
+      // A pressed tab gets focus, without the browser scrolling it, before the press is released.
+      // Scrolling then moves the tab out from under the pointer, and the press never becomes a click.
+      ctx.tabs[2].focus({ preventScroll: true });
+      await task(500);
+
+      expect(ctx.tabs[2].matches(':focus-visible')).toBe(false);
+      expect(ctx.scrollContainer.scrollLeft).toBe(0);
+    });
+
+    it('should scroll a tab into view when it is focused with the keyboard', async () => {
+      const ctx = await createFixture({ scrollButtons: true, activeTab: 0, width: '200px' });
+      await ctx.waitForScrollableUpdate(true);
+      ctx.tabs[0].focus();
+
+      await userEvent.keyboard('{End}');
+      await task(500);
+
+      expect(ctx.tabs[2].matches(':focus-visible')).toBe(true);
+      expect(ctx.scrollContainer.scrollLeft).toBeGreaterThan(0);
+    });
+
     it('should scroll forward when forward scroll button is clicked', async () => {
       const ctx = await createFixture({ scrollButtons: true, width: '150px' });
       const scrollBySpy = vi.spyOn(ctx.scrollContainer, 'scrollBy');
