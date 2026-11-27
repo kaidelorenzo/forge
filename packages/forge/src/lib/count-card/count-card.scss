@@ -17,6 +17,10 @@ $icon-container-size: 32px !default;
   height: 100%;
 }
 
+:host([hidden]) {
+  display: none;
+}
+
 forge-card {
   --forge-card-padding: 0;
   height: 100%;

@@ -20,6 +20,14 @@ describe('Count Card', () => {
     expect(window.customElements.get('forge-tooltip')).toBeTruthy();
   });
 
+  it('should not be displayed when hidden', async () => {
+    const harness = await createFixture();
+
+    harness.element.hidden = true;
+
+    expect(getComputedStyle(harness.element).display).toBe('none');
+  });
+
   it('should have all slots available', async () => {
     const harness = await createFixture();
 
