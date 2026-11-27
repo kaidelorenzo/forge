@@ -20,6 +20,8 @@ import {
 import { TextFieldComponentDelegate } from '../text-field/index.js';
 import type { ITooltipComponent } from '../tooltip/index.js';
 
+import forgeTableStyles from './forge-table.scss?inline';
+
 import './table.js';
 
 const columns: IColumnConfiguration[] = [
@@ -60,6 +62,13 @@ type TableCoreInternal = ITableCore & {
 type TableComponentWithCore = ITableComponent & { _core: TableCoreInternal };
 
 describe('TableComponent', () => {
+  beforeAll(() => {
+    // The table's layout, such as how resized columns keep their widths, comes from its global styles
+    const style = document.createElement('style');
+    style.textContent = forgeTableStyles;
+    document.head.append(style);
+  });
+
   beforeAll(() => {
     defineTableComponent();
   });
@@ -1739,6 +1748,66 @@ describe('TableComponent', () => {
       expect(firstCell.style.width).toBe(`${originalWidth + 100}px`);
     });
 
+    it('should keep the other columns at their widths and fit the table to its columns when a column is resized', async () => {
+      const harness = await createFixture();
+      harness.component.resizable = true;
+      harness.component.columnConfigurations = resizableColumns;
+
+      const cells = Array.from(harness.getTableHeaderRow().cells) as HTMLTableCellElement[];
+      const otherWidths = cells.slice(1).map(cell => cell.getBoundingClientRect().width);
+      const originalWidth = cells[0].offsetWidth;
+      const resizeHandle = getTableResizeHandle(harness.tableElement);
+
+      resizeHandle.dispatchEvent(new MouseEvent('mousedown', { clientX: originalWidth, clientY: 0, bubbles: true }));
+      harness.core._onMouseMove(new MouseEvent('mousemove', { clientX: originalWidth + 100, clientY: 0, bubbles: true }));
+      harness.core._onMouseUp(new MouseEvent('mouseup', { clientX: originalWidth + 100, clientY: 0, bubbles: true }));
+
+      expect(harness.tableElement.classList.contains(TABLE_CONSTANTS.classes.TABLE_RESIZED)).toBe(true);
+      expect(cells.slice(1, -1).map(cell => cell.getBoundingClientRect().width)).toEqual(otherWidths.slice(0, -1));
+      const lastCell = cells[cells.length - 1];
+      expect(lastCell.style.width).toBe('');
+      const lastWidth = Number(lastCell.dataset[TABLE_CONSTANTS.dataset.LAST_COLUMN_WIDTH]);
+      const columnsWidth = cells.slice(0, -1).reduce((total, cell) => total + parseFloat(cell.style.width), 0) + lastWidth;
+      expect(harness.tableElement.style.width).toBe(`${columnsWidth}px`);
+    });
+
+    it('should keep a resized table as wide as its container, the last column taking the space left', async () => {
+      const harness = await createFixture();
+      harness.component.resizable = true;
+      harness.component.columnConfigurations = resizableColumns;
+
+      const cells = Array.from(harness.getTableHeaderRow().cells) as HTMLTableCellElement[];
+      const tableWidth = harness.tableElement.getBoundingClientRect().width;
+      const lastWidth = cells[cells.length - 1].getBoundingClientRect().width;
+      const originalWidth = cells[0].offsetWidth;
+      const resizeHandle = getTableResizeHandle(harness.tableElement);
+
+      resizeHandle.dispatchEvent(new MouseEvent('mousedown', { clientX: originalWidth, clientY: 0, bubbles: true }));
+      harness.core._onMouseMove(new MouseEvent('mousemove', { clientX: originalWidth - 20, clientY: 0, bubbles: true }));
+      harness.core._onMouseUp(new MouseEvent('mouseup', { clientX: originalWidth - 20, clientY: 0, bubbles: true }));
+
+      expect(harness.tableElement.getBoundingClientRect().width).toBeCloseTo(tableWidth, 0);
+      expect(cells[cells.length - 1].getBoundingClientRect().width).toBeCloseTo(lastWidth + 20, 0);
+    });
+
+    it('should size the columns to their content again when the table is rendered after a resize', async () => {
+      const harness = await createFixture();
+      harness.component.resizable = true;
+      harness.component.columnConfigurations = resizableColumns;
+
+      const firstCell = harness.getTableHeaderRow().cells.item(0) as HTMLTableHeaderCellElement;
+      const originalWidth = firstCell.offsetWidth;
+      const resizeHandle = getTableResizeHandle(harness.tableElement);
+      resizeHandle.dispatchEvent(new MouseEvent('mousedown', { clientX: originalWidth, clientY: 0, bubbles: true }));
+      harness.core._onMouseMove(new MouseEvent('mousemove', { clientX: originalWidth + 100, clientY: 0, bubbles: true }));
+      harness.core._onMouseUp(new MouseEvent('mouseup', { clientX: originalWidth + 100, clientY: 0, bubbles: true }));
+
+      harness.component.hideColumn(2);
+
+      expect(harness.tableElement.classList.contains(TABLE_CONSTANTS.classes.TABLE_RESIZED)).toBe(false);
+      expect(harness.tableElement.style.width).toBe('');
+    });
+
     it('should emit event when column has been resized', async () => {
       const harness = await createFixture();
       harness.component.resizable = true;
@@ -1772,6 +1841,23 @@ describe('TableComponent', () => {
       harness.core._onMouseUp(new MouseEvent('mouseup', { clientX: 50, clientY: 0, bubbles: true }));
 
       expect(firstCell.style.width).toBe('100px');
+    });
+
+    it('should not widen a column narrower than min-resize-width when its resize handle is moved', async () => {
+      const harness = await createFixture();
+      harness.component.resizable = true;
+      harness.component.columnConfigurations = resizableColumns;
+
+      const firstCell = harness.getTableHeaderRow().cells.item(0) as HTMLTableHeaderCellElement;
+      const originalWidth = firstCell.offsetWidth;
+      harness.component.minResizeWidth = originalWidth + 50;
+      const resizeHandle = getTableResizeHandle(harness.tableElement);
+
+      resizeHandle.dispatchEvent(new MouseEvent('mousedown', { clientX: originalWidth, clientY: 0, bubbles: true }));
+      harness.core._onMouseMove(new MouseEvent('mousemove', { clientX: originalWidth - 10, clientY: 0, bubbles: true }));
+      harness.core._onMouseUp(new MouseEvent('mouseup', { clientX: originalWidth - 10, clientY: 0, bubbles: true }));
+
+      expect(firstCell.style.width).toBe(`${originalWidth}px`);
     });
 
     it('should not set width to min-resize-width when column width is larger than min width when resize handle is moved', async () => {

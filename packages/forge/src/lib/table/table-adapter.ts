@@ -53,6 +53,8 @@ export interface ITableAdapter extends IBaseAdapter {
   addDocumentListener(type: string, listener: (evt: MouseEvent) => void): void;
   removeDocumentListener(type: string, listener: (evt: MouseEvent) => void): void;
   normalizeColumnWidths(configuration: ITableConfiguration): void;
+  freezeColumnWidths(configuration: ITableConfiguration): void;
+  fitTableToColumns(configuration: ITableConfiguration): void;
   setResizeColumnVisibility(configuration: ITableConfiguration, columnIndex: number, isVisible: boolean): void;
   addTableClass(classes: string | string[]): void;
   removeTableClass(classes: string | string[]): void;
@@ -226,6 +228,14 @@ export class TableAdapter extends BaseAdapter<ITableComponent> implements ITable
 
   public normalizeColumnWidths(configuration: ITableConfiguration): void {
     TableUtils.normalizeColumnWidths(configuration);
+  }
+
+  public freezeColumnWidths(configuration: ITableConfiguration): void {
+    TableUtils.freezeColumnWidths(configuration);
+  }
+
+  public fitTableToColumns(configuration: ITableConfiguration): void {
+    TableUtils.fitTableToColumns(configuration);
   }
 
   public setResizeColumnVisibility(configuration: ITableConfiguration, columnIndex: number, isVisible: boolean): void {

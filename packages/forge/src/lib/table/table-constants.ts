@@ -7,6 +7,7 @@ const classes = {
   TABLE_DENSE: 'forge-table--dense',
   TABLE_ROOMY: 'forge-table--roomy',
   TABLE_RESIZABLE: 'forge-table--resizable',
+  TABLE_RESIZED: 'forge-table--resized',
   TABLE_RESIZING: 'forge-table--resizing',
   TABLE_RESIZE_HANDLE: 'forge-table__resize-handle',
   TABLE_NO_WRAP_CONTENT: 'forge-table--no-wrap-content',
@@ -122,6 +123,11 @@ const numbers = {
   RESIZE_HOVER_DURATION: 150
 };
 
+const dataset = {
+  /** The width a resized table's last column takes at least, as it fills the rest of the table. */
+  LAST_COLUMN_WIDTH: 'forgeTableLastColumnWidth'
+};
+
 export const TABLE_CONSTANTS = {
   elementName,
   classes,
@@ -130,5 +136,6 @@ export const TABLE_CONSTANTS = {
   events,
   strings,
   icons,
-  numbers
+  numbers,
+  dataset
 };

@@ -56,6 +56,7 @@ export class TableUtils {
   public static createTable(configuration: ITableConfiguration, signal: AbortSignal): void {
     // Reset the table back to its original unpopulated state
     TableUtils._resetTable(configuration.tableElement);
+    TableUtils.unfreezeColumnWidths(configuration);
 
     // Create the header and body rows
     const thead = TableUtils._createTableHead(configuration);
@@ -1894,6 +1895,54 @@ export class TableUtils {
         }
       }
     }
+  }
+
+  /**
+   * Fixes every column at the width it has, so resizing a column changes only that column and the
+   * table's width. Does nothing once the columns are fixed.
+   * @param configuration The table configuration.
+   */
+  public static freezeColumnWidths(configuration: ITableConfiguration): void {
+    const tableElement = configuration.tableElement;
+    if (tableElement.classList.contains(TABLE_CONSTANTS.classes.TABLE_RESIZED) || !tableElement.tHead?.rows.length) {
+      return;
+    }
+    const cells = Array.from(tableElement.tHead.rows[0].cells);
+    const widths = cells.map(cell => cell.getBoundingClientRect().width);
+    cells.forEach((cell, index) => (cell.style.width = `${widths[index]}px`));
+    tableElement.classList.add(TABLE_CONSTANTS.classes.TABLE_RESIZED);
+    TableUtils.fitTableToColumns(configuration);
+  }
+
+  /**
+   * Sets the width of a table whose columns are fixed to the sum of their widths. The last column
+   * keeps its width as the least it takes rather than as its width, so it takes any space the
+   * other columns leave the table, which fills its container.
+   * @param configuration The table configuration.
+   */
+  public static fitTableToColumns(configuration: ITableConfiguration): void {
+    const tableElement = configuration.tableElement;
+    if (!tableElement.classList.contains(TABLE_CONSTANTS.classes.TABLE_RESIZED) || !tableElement.tHead?.rows.length) {
+      return;
+    }
+    const cells = Array.from(tableElement.tHead.rows[0].cells);
+    const lastCell = cells[cells.length - 1];
+    if (lastCell.style.width) {
+      lastCell.dataset[TABLE_CONSTANTS.dataset.LAST_COLUMN_WIDTH] = String(parseFloat(lastCell.style.width));
+      lastCell.style.removeProperty('width');
+    }
+    const otherWidths = cells.slice(0, -1).reduce((total, cell) => total + parseFloat(cell.style.width), 0);
+    const lastWidth = Number(lastCell.dataset[TABLE_CONSTANTS.dataset.LAST_COLUMN_WIDTH]);
+    tableElement.style.width = `${otherWidths + lastWidth}px`;
+  }
+
+  /**
+   * Lets the columns size to their content again, as they do before any column is resized.
+   * @param configuration The table configuration.
+   */
+  public static unfreezeColumnWidths(configuration: ITableConfiguration): void {
+    configuration.tableElement.classList.remove(TABLE_CONSTANTS.classes.TABLE_RESIZED);
+    configuration.tableElement.style.removeProperty('width');
   }
 
   /**

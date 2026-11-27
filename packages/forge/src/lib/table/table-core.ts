@@ -972,6 +972,7 @@ export class TableCore implements ITableCore {
     this._headCellMouseDownIndex = cellIndex;
 
     if (target !== thElement && target.classList.contains(TABLE_CONSTANTS.classes.TABLE_RESIZE_HANDLE)) {
+      this._adapter.freezeColumnWidths(this._tableConfiguration);
       this._resizeDescriptor = {
         element: thElement,
         startWidth: thElement.offsetWidth,
@@ -995,12 +996,15 @@ export class TableCore implements ITableCore {
   private _onMouseMove(evt: MouseEvent): void {
     if (this._resizeDescriptor) {
       let newWidth = this._resizeDescriptor.startWidth + (evt.pageX - this._resizeDescriptor.startX);
-      // Ensure that the user can't drag the column past the minimum column width
-      if (newWidth < this._minResizeWidth) {
-        newWidth = this._minResizeWidth;
+      // Ensure that the user can't drag the column past the minimum column width. A column that
+      // starts narrower than that keeps its own width as its minimum rather than jumping wider.
+      const minWidth = Math.min(this._minResizeWidth, this._resizeDescriptor.startWidth);
+      if (newWidth < minWidth) {
+        newWidth = minWidth;
       }
       this._resizeDescriptor.width = newWidth;
       this._resizeDescriptor.element.style.width = `${newWidth}px`;
+      this._adapter.fitTableToColumns(this._tableConfiguration);
       this._adapter.addTableClass(TABLE_CONSTANTS.classes.TABLE_RESIZING);
     }
   }
@@ -1016,6 +1020,7 @@ export class TableCore implements ITableCore {
 
     if (this._resizeDescriptor) {
       this._adapter.normalizeColumnWidths(this._tableConfiguration);
+      this._adapter.fitTableToColumns(this._tableConfiguration);
       this._adapter.setResizeColumnVisibility(this._tableConfiguration, this._headCellMouseDownIndex, false);
       const resizeEventData: ITableColumnResizeEventData = {
         index: this._resizeDescriptor.index,

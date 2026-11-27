@@ -20,7 +20,13 @@ forge-table {
     }
   }
 
+  // A resizable table gives each column the width of its content, filling its container when it's
+  // narrower, as the user can narrow any column they want to. Narrowing it to fit instead squeezes
+  // every column to its narrowest, and a browser ignores a column's width while it does.
   &--resizable {
+    width: max-content;
+    min-width: 100%;
+
     .forge-table-head__cell {
       position: relative;
 
@@ -43,6 +49,20 @@ forge-table {
   &--resizing {
     -webkit-user-drag: none;
     user-select: none;
+  }
+
+  // Once a column is resized, each column keeps the width it has and the table is as wide as its
+  // columns, so dragging changes only that column, and narrower than its content when dragged so.
+  // The table still fills its container, the last column taking any space the others leave.
+  &--resized {
+    table-layout: fixed;
+
+    // A column dragged narrower than what it holds cuts it off rather than spilling into the next.
+    // Only this table's own cells, not those of a table nested in an expanded row.
+    > tbody > tr > .forge-table-body__cell {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   &--layout-fixed {
