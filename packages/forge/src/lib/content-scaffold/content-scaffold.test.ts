@@ -264,6 +264,25 @@ describe('Content Scaffold', () => {
     });
   });
 
+  describe('layout', () => {
+    it('should keep the footer at the bottom when there is no header', async () => {
+      const harness = await createFixture(html`
+        <div slot="body">Body</div>
+        <div slot="footer-start">Footer</div>
+      `);
+      harness.element.parentElement!.style.height = '400px';
+      await harness.element.updateComplete;
+
+      const containerRect = harness.outerContainerElement.getBoundingClientRect();
+      const bodyRect = harness.bodyElement!.getBoundingClientRect();
+      const footerRect = harness.footerElement!.getBoundingClientRect();
+      expect(containerRect.height).toBeCloseTo(400, 0);
+      expect(footerRect.bottom).toBeCloseTo(containerRect.bottom, 0);
+      expect(footerRect.top).toBeCloseTo(bodyRect.bottom, 0);
+      expect(bodyRect.height).toBeGreaterThan(footerRect.height);
+    });
+  });
+
   describe('slot detection for full-width modes', () => {
     describe('full-width header via slot detection', () => {
       it('should render full-width header when header slot has content', async () => {

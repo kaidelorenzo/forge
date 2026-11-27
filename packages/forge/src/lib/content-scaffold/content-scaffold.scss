@@ -20,7 +20,27 @@
 .outer-container {
   display: grid;
   grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'header'
+    'body'
+    'footer';
   height: 100%;
+}
+
+// Each section keeps its own row, so the body still fills the space between them when there is no
+// header
+.header,
+.header-full-content {
+  grid-area: header;
+}
+
+.body {
+  grid-area: body;
+}
+
+.footer,
+.footer-full-content {
+  grid-area: footer;
 }
 
 .header {
