@@ -152,6 +152,10 @@ interface HideRefInternal {
 class HideWhenEmptyDirective extends AsyncDirective {
   #ref?: HideRef;
   #isInitialized = false;
+  #element?: HTMLElement;
+  #part?: ElementPart;
+  // A hidden assigned element shows nothing, so hiding or showing one can change whether the element is empty
+  #hiddenObserver = new MutationObserver(() => this.#refresh());
 
   public update(part: ElementPart, [ref]: Parameters<this['render']>): void {
     const refChanged = ref !== this.#ref;
@@ -163,12 +167,12 @@ class HideWhenEmptyDirective extends AsyncDirective {
       return;
     }
     const element = part.element as HTMLElement;
-    element.addEventListener('slotchange', () => {
-      this.#toggleHidden(element);
-      this.#requestUpdate(part);
-    });
+    this.#element = element;
+    this.#part = part;
+    element.addEventListener('slotchange', () => this.#refresh());
 
     this.#toggleHidden(element);
+    this.#observeAssignedElements(element);
     queueMicrotask(() => this.#requestUpdate(part));
     this.#isInitialized = true;
   }
@@ -177,9 +181,36 @@ class HideWhenEmptyDirective extends AsyncDirective {
     return noChange;
   }
 
+  public override disconnected(): void {
+    this.#hiddenObserver.disconnect();
+  }
+
+  public override reconnected(): void {
+    if (this.#element) {
+      this.#observeAssignedElements(this.#element);
+    }
+  }
+
+  #refresh(): void {
+    if (!this.#element || !this.#part) {
+      return;
+    }
+    this.#toggleHidden(this.#element);
+    this.#observeAssignedElements(this.#element);
+    this.#requestUpdate(this.#part);
+  }
+
+  #observeAssignedElements(element: HTMLElement): void {
+    this.#hiddenObserver.disconnect();
+    element.querySelectorAll('slot').forEach(slot => {
+      slot.assignedElements().forEach(assigned => this.#hiddenObserver.observe(assigned, { attributes: true, attributeFilter: ['hidden'] }));
+    });
+  }
+
+  // An assigned element that is hidden shows nothing, so it doesn't count as content
   #hasAssignedNodes(element: HTMLElement): boolean {
     const slots = element.querySelectorAll('slot');
-    return Array.from(slots).some(slot => slot.assignedNodes().length > 0);
+    return Array.from(slots).some(slot => slot.assignedNodes().some(node => !(node instanceof HTMLElement && node.hidden)));
   }
 
   #toggleHidden(element: HTMLElement): void {
@@ -205,7 +236,7 @@ class HideWhenEmptyDirective extends AsyncDirective {
 }
 
 /**
- * Sets the display of an element to 'none' when it has no assigned nodes in its slots, and restores the display when nodes are assigned. A reference object may be used to track the hidden state.
+ * Sets the display of an element to 'none' when it has no assigned nodes in its slots, or only assigned elements that are hidden, and restores the display when visible content is assigned. A reference object may be used to track the hidden state.
  * @example
  * ```ts
  * const hideRef = createHideRef();

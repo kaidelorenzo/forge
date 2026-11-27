@@ -280,6 +280,27 @@ describe('Structured Card', () => {
       expect(harness.isElementHidden(harness.footerActionsElement)).toBe(true);
     });
 
+    it('should hide footer-actions wrapper when its only footer action is hidden', async () => {
+      const harness = await createFixture(html`<button slot="footer-primary-action" hidden>Save</button>`);
+
+      expect(harness.isElementHidden(harness.footerActionsElement)).toBe(true);
+    });
+
+    it('should show and hide footer-actions wrapper as its footer action is shown and hidden', async () => {
+      const harness = await createFixture(html`<button slot="footer-primary-action" id="save-btn" hidden>Save</button>`);
+      const button = harness.element.querySelector('#save-btn') as HTMLButtonElement;
+
+      button.hidden = false;
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await harness.element.updateComplete;
+      expect(harness.isElementHidden(harness.footerActionsElement)).toBe(false);
+
+      button.hidden = true;
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await harness.element.updateComplete;
+      expect(harness.isElementHidden(harness.footerActionsElement)).toBe(true);
+    });
+
     it('should keep footer-actions wrapper visible when one action is removed but another remains', async () => {
       const harness = await createFixture(html`
         <button slot="footer-secondary-action" id="cancel-btn">Cancel</button>
