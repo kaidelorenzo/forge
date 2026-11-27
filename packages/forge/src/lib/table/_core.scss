@@ -295,6 +295,17 @@
   align-items: center;
 }
 
+// The spacer row that keeps a body with fewer rows than `minRows` the height of the missing rows.
+@mixin body-spacer-row($row-height) {
+  /* stylelint-disable-next-line custom-property-pattern */
+  height: calc(var(--_forge-table-spacer-rows, 0) * #{$row-height});
+}
+
+@mixin body-spacer-cell {
+  padding: 0;
+  border: none;
+}
+
 // The base table body row styles for row interactions.
 @mixin body-row {
   height: variables.$tbody-row-height;

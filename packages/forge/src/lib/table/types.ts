@@ -46,6 +46,7 @@ export interface ITableConfiguration {
   wrapContent: boolean;
   resizable: boolean;
   includeFooter: boolean;
+  minRows: number;
   fixedHeaders: boolean;
   layoutType: TableLayoutType;
   selectCheckboxAlignment: CellAlign;

@@ -41,6 +41,7 @@ export interface ITableCore {
   includeFooter: boolean;
   resizable: boolean;
   minResizeWidth: number;
+  minRows: number;
   allowRowClick: boolean;
   multiColumnSort: boolean;
   rowCreated: TableRowCreatedCallback;
@@ -91,6 +92,7 @@ export class TableCore implements ITableCore {
   private _includeFooter = false;
   private _resizable = false;
   private _minResizeWidth = TABLE_CONSTANTS.numbers.MIN_RESIZE_WIDTH;
+  private _minRows = 0;
   private _multiColumnSort = false;
   private _selectCheckboxAlignment: CellAlign = CellAlign.Center;
   private _tooltipSelect: string | TableSelectTooltipCallback;
@@ -240,7 +242,8 @@ export class TableCore implements ITableCore {
       selectCheckboxAlignment: this._selectCheckboxAlignment,
       tooltipSelect: this._tooltipSelect,
       tooltipSelectAll: this._tooltipSelectAll,
-      includeFooter: this._includeFooter
+      includeFooter: this._includeFooter,
+      minRows: this._minRows
     };
   }
 
@@ -413,6 +416,18 @@ export class TableCore implements ITableCore {
     if (this._resizable !== value) {
       this._resizable = value;
       this._adapter.setResizable(this._tableConfiguration);
+    }
+  }
+
+  /** Gets/sets the number of rows the table body keeps the height of when it shows fewer rows. */
+  public get minRows(): number {
+    return this._minRows;
+  }
+  public set minRows(value: number) {
+    const minRows = isNumber(value) && value > 0 ? Math.floor(value) : 0;
+    if (this._minRows !== minRows) {
+      this._minRows = minRows;
+      this._adapter.setBodySpacer(this._tableConfiguration);
     }
   }
 

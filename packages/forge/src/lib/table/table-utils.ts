@@ -121,6 +121,7 @@ export class TableUtils {
     }
 
     TableUtils._setTableBody(configuration.tableElement, tbody);
+    TableUtils.setBodySpacer(configuration);
 
     if (configuration.includeFooter) {
       TableUtils._setTableFoot(configuration.tableElement, tfoot);
@@ -191,6 +192,7 @@ export class TableUtils {
     }
 
     TableUtils._setTableBody(configuration.tableElement, tbody);
+    TableUtils.setBodySpacer(configuration);
   }
 
   /**
@@ -1532,6 +1534,33 @@ export class TableUtils {
   /**
    * Adds/removes the wrap class on the table.
    */
+  /**
+   * Keeps the table body the height of `minRows` rows when it shows fewer, with a spacer body after
+   * it as tall as the missing rows. The spacer is hidden from assistive technology.
+   * @param configuration The table configuration.
+   */
+  public static setBodySpacer(configuration: ITableConfiguration): void {
+    const tableElement = configuration.tableElement;
+    const tbody = tableElement.tBodies[0];
+    let spacer = tableElement.querySelector<HTMLTableSectionElement>(`:scope > tbody.${TABLE_CONSTANTS.classes.TABLE_BODY_SPACER}`);
+    const missingRows = Math.max(0, configuration.minRows - configuration.data.length);
+    if (!tbody || tbody === spacer || !missingRows) {
+      spacer?.remove();
+      return;
+    }
+
+    if (!spacer) {
+      spacer = document.createElement('tbody');
+      spacer.classList.add(TABLE_CONSTANTS.classes.TABLE_BODY_SPACER);
+      spacer.setAttribute('aria-hidden', 'true');
+      spacer.insertRow().insertCell();
+    }
+    const cell = spacer.rows[0].cells[0];
+    cell.colSpan = configuration.columnConfigurations.length + (configuration.selectListener ? 1 : 0);
+    spacer.style.setProperty('--_forge-table-spacer-rows', String(missingRows));
+    tbody.after(spacer);
+  }
+
   public static setWrapContentState(tableElement: HTMLTableElement, wrapContent: boolean): void {
     if (wrapContent) {
       tableElement.classList.remove(TABLE_CONSTANTS.classes.TABLE_NO_WRAP_CONTENT);

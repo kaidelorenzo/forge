@@ -8,15 +8,34 @@ forge-table {
 .forge-table {
   @include base;
 
+  // The dense and roomy tables below size the spacer to their own row height
+  .forge-table-body-spacer {
+    > tr {
+      @include body-spacer-row(variables.$tbody-row-height);
+    }
+
+    td {
+      @include body-spacer-cell;
+    }
+  }
+
   &--dense {
     .forge-table-row {
       @include row-dense;
+    }
+
+    .forge-table-body-spacer > tr {
+      @include body-spacer-row(variables.$thead-dense-row-height);
     }
   }
 
   &--roomy {
     .forge-table-row {
       @include row-roomy;
+    }
+
+    .forge-table-body-spacer > tr {
+      @include body-spacer-row(variables.$thead-roomy-row-height);
     }
   }
 

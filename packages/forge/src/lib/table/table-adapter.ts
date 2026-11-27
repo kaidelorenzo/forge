@@ -50,6 +50,7 @@ export interface ITableAdapter extends IBaseAdapter {
   setFixedHeaders(configuration: ITableConfiguration): void;
   setTableLayoutType(configuration: ITableConfiguration): void;
   setWrapContentState(configuration: ITableConfiguration): void;
+  setBodySpacer(configuration: ITableConfiguration): void;
   addDocumentListener(type: string, listener: (evt: MouseEvent) => void): void;
   removeDocumentListener(type: string, listener: (evt: MouseEvent) => void): void;
   normalizeColumnWidths(configuration: ITableConfiguration): void;
@@ -214,6 +215,10 @@ export class TableAdapter extends BaseAdapter<ITableComponent> implements ITable
 
   public setWrapContentState(configuration: ITableConfiguration): void {
     TableUtils.setWrapContentState(configuration.tableElement, configuration.wrapContent);
+  }
+
+  public setBodySpacer(configuration: ITableConfiguration): void {
+    TableUtils.setBodySpacer(configuration);
   }
 
   public addDocumentListener(type: string, listener: (evt: MouseEvent) => void): void {

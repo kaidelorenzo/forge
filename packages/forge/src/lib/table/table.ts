@@ -43,6 +43,7 @@ export interface ITableComponent extends IBaseComponent {
   wrapContent: boolean;
   resizable: boolean;
   minResizeWidth: number;
+  minRows: number;
   allowRowClick: boolean;
   multiColumnSort: boolean;
   selectCheckboxAlignment: `${CellAlign}`;
@@ -131,6 +132,7 @@ export class TableComponent extends BaseComponent implements ITableComponent {
       TABLE_CONSTANTS.attributes.WRAP_CONTENT,
       TABLE_CONSTANTS.attributes.RESIZABLE,
       TABLE_CONSTANTS.attributes.MIN_RESIZE_WIDTH,
+      TABLE_CONSTANTS.attributes.MIN_ROWS,
       TABLE_CONSTANTS.attributes.ALLOW_ROW_CLICK,
       TABLE_CONSTANTS.attributes.MULTI_COLUMN_SORT,
       TABLE_CONSTANTS.attributes.SELECT_CHECKBOX_ALIGNMENT,
@@ -194,6 +196,9 @@ export class TableComponent extends BaseComponent implements ITableComponent {
         break;
       case TABLE_CONSTANTS.attributes.MIN_RESIZE_WIDTH:
         this.minResizeWidth = coerceNumber(newValue);
+        break;
+      case TABLE_CONSTANTS.attributes.MIN_ROWS:
+        this.minRows = coerceNumber(newValue);
         break;
       case TABLE_CONSTANTS.attributes.ALLOW_ROW_CLICK:
         this.allowRowClick = coerceBoolean(newValue);
@@ -471,6 +476,16 @@ export class TableComponent extends BaseComponent implements ITableComponent {
    */
   @coreProperty()
   declare public minResizeWidth: number;
+
+  /**
+   * The number of rows the table body keeps the height of when it shows fewer, such as on the last
+   * page of a paged table, so the content after the table doesn't move. 0 (the default) lets the
+   * body shrink to its rows.
+   * @default 0
+   * @attribute min-rows
+   */
+  @coreProperty()
+  declare public minRows: number;
 
   /**
    * Gets/sets whether the rows respond to (and emit) row click events.

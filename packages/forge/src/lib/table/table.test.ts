@@ -20,6 +20,8 @@ import {
 import { TextFieldComponentDelegate } from '../text-field/index.js';
 import type { ITooltipComponent } from '../tooltip/index.js';
 
+import forgeTableStyles from './forge-table.scss?inline';
+
 import './table.js';
 
 const columns: IColumnConfiguration[] = [
@@ -60,6 +62,13 @@ type TableCoreInternal = ITableCore & {
 type TableComponentWithCore = ITableComponent & { _core: TableCoreInternal };
 
 describe('TableComponent', () => {
+  beforeAll(() => {
+    // The table's layout, such as how resized columns keep their widths, comes from its global styles
+    const style = document.createElement('style');
+    style.textContent = forgeTableStyles;
+    document.head.append(style);
+  });
+
   beforeAll(() => {
     defineTableComponent();
   });
@@ -828,6 +837,79 @@ describe('TableComponent', () => {
       const harness = await createFixture();
       harness.component.minResizeWidth = -5;
       expect(harness.component.minResizeWidth).toBe(0);
+    });
+
+    describe('min rows', () => {
+      const pageOfRows = (count: number): any[] => Array.from({ length: count }, (_, i) => ({ Name: `Name ${i}`, Age: i, Position: 'Position' }));
+      const bodyHeight = (table: HTMLTableElement): number =>
+        Array.from(table.tBodies).reduce((total, tbody) => total + tbody.getBoundingClientRect().height, 0);
+      const spacerOf = (table: HTMLTableElement): HTMLTableSectionElement | null =>
+        table.querySelector(`:scope > tbody.${TABLE_CONSTANTS.classes.TABLE_BODY_SPACER}`);
+
+      it('should set min rows from the attribute and ignore invalid values', async () => {
+        const harness = await createFixture();
+        harness.component.setAttribute(TABLE_CONSTANTS.attributes.MIN_ROWS, '5');
+        expect(harness.component.minRows).toBe(5);
+        harness.component.minRows = 2.7;
+        expect(harness.component.minRows).toBe(2);
+        harness.component.minRows = -1;
+        expect(harness.component.minRows).toBe(0);
+      });
+
+      it('should keep the body the height of min rows when it shows fewer rows', async () => {
+        const harness = await createFixture();
+        harness.component.columnConfigurations = columns;
+        harness.component.data = pageOfRows(5);
+        harness.component.render();
+        const fullHeight = bodyHeight(harness.tableElement);
+
+        harness.component.minRows = 5;
+        harness.component.data = pageOfRows(2);
+        harness.component.render();
+
+        expect(harness.tableElement.tBodies[0].rows.length).toBe(2);
+        expect(bodyHeight(harness.tableElement)).toBeCloseTo(fullHeight, 0);
+      });
+
+      it('should keep the body the height of min rows of its density', async () => {
+        const harness = await createFixture();
+        harness.component.dense = true;
+        harness.component.columnConfigurations = columns;
+        harness.component.data = pageOfRows(5);
+        harness.component.render();
+        const fullHeight = bodyHeight(harness.tableElement);
+
+        harness.component.minRows = 5;
+        harness.component.data = pageOfRows(2);
+        harness.component.render();
+
+        expect(bodyHeight(harness.tableElement)).toBeCloseTo(fullHeight, 0);
+      });
+
+      it('should hide the space it keeps from assistive technology', async () => {
+        const harness = await createFixture();
+        harness.component.minRows = 5;
+        harness.component.columnConfigurations = columns;
+        harness.component.data = pageOfRows(2);
+        harness.component.render();
+
+        const spacer = spacerOf(harness.tableElement);
+        expect(spacer?.getAttribute('aria-hidden')).toBe('true');
+        expect(spacer?.rows[0].cells[0].colSpan).toBe(columns.length);
+      });
+
+      it('should keep no space when the table shows min rows or more', async () => {
+        const harness = await createFixture();
+        harness.component.minRows = 2;
+        harness.component.columnConfigurations = columns;
+        harness.component.data = pageOfRows(1);
+        harness.component.render();
+        expect(spacerOf(harness.tableElement)).not.toBeNull();
+
+        harness.component.data = pageOfRows(2);
+        harness.component.render();
+        expect(spacerOf(harness.tableElement)).toBeNull();
+      });
     });
 
     it('should set filter', async () => {
