@@ -203,7 +203,8 @@ export class TableCore implements ITableCore {
   }
   public get columnConfigurations(): IColumnConfiguration[] {
     // Intentional shallow copy of member properties. These member objects have properties that are references to functions.
-    return this._columnConfigurations.map(cc => ({ ...cc }));
+    // `hidden` is what the table shows, so it agrees with `hideColumn()` and `showColumn()` as well as the setter.
+    return this._columnConfigurations.map(cc => ({ ...cc, hidden: this._hiddenColumnManager.exists(cc) }));
   }
 
   /** Gets the visible column configurations. */

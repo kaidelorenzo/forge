@@ -1270,6 +1270,18 @@ describe('TableComponent', () => {
       expect(harness.component.isColumnHidden(1)).toBe(false);
     });
 
+    it('should report hidden columns in its column configurations', async () => {
+      const harness = await createFixture();
+      const testColumns = deepCopy(columns);
+      testColumns[1].hidden = true;
+      harness.component.columnConfigurations = testColumns;
+
+      harness.component.hideColumn(0);
+      harness.component.showColumn(1);
+
+      expect(harness.component.columnConfigurations.map(c => c.hidden)).toEqual(columns.map((_, index) => index === 0));
+    });
+
     it('should reset the sorted column on hide column', async () => {
       const harness = await createFixture();
       const testColumns = deepCopy(columns);
