@@ -90,6 +90,12 @@
   height: 1em;
 }
 
+// Icons are square, so an icon logo keeps its width before its icon is loaded and the title beside
+// it doesn't shift when it is
+@mixin icon-logo {
+  width: 1em;
+}
+
 @mixin elevation-raised {
   box-shadow: #{token(elevation)};
 }

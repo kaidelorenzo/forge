@@ -168,6 +168,10 @@ $host-tokens: (background, foreground);
 // Slotted - Logo
 //
 
+::slotted(forge-icon[slot='logo']) {
+  @include icon-logo;
+}
+
 ::slotted([slot='logo']) {
   @include logo;
 }

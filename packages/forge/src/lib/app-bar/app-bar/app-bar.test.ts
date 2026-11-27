@@ -23,6 +23,17 @@ describe('App Bar', () => {
     expect(el.shadowRoot).not.toBeNull();
   });
 
+  it('should give an icon logo its width before its icon is loaded', async () => {
+    const screen = render(html`<forge-app-bar><forge-icon slot="logo"></forge-icon></forge-app-bar>`);
+    const el = screen.container.querySelector('forge-app-bar') as AppBarComponent;
+    const logo = el.querySelector('forge-icon') as HTMLElement;
+    await frame();
+
+    const { width, height } = logo.getBoundingClientRect();
+    expect(width).toBeGreaterThan(0);
+    expect(width).toBe(height);
+  });
+
   it('should be accessible', async () => {
     const screen = render(html`<forge-app-bar title-text="Test"></forge-app-bar>`);
     const el = screen.container.querySelector('forge-app-bar') as AppBarComponent;
