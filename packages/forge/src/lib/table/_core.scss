@@ -349,13 +349,9 @@
   border-right-color: #{theme.variable(primary)};
   box-sizing: border-box;
   margin-right: #{spacing.variable(xxsmall)};
-  transition-property: border-right-width;
-  transition-duration: #{animation.variable(duration-medium1)};
-  transition-timing-function: #{animation.variable(easing-accelerate)};
 }
 
 @mixin resize-handle-hover {
-  border-right-width: #{border.variable(thick)};
   cursor: col-resize;
 }
 

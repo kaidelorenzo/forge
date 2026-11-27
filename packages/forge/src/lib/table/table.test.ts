@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-lit';
 import { html, nothing } from 'lit';
+import { userEvent } from 'vitest/browser';
 import { task, frame } from '../core/utils/utils.js';
 import {
   CellAlign,
@@ -19,6 +20,8 @@ import {
 } from './index.js';
 import { TextFieldComponentDelegate } from '../text-field/index.js';
 import type { ITooltipComponent } from '../tooltip/index.js';
+
+import forgeTableStyles from './forge-table.scss?inline';
 
 import './table.js';
 
@@ -60,6 +63,13 @@ type TableCoreInternal = ITableCore & {
 type TableComponentWithCore = ITableComponent & { _core: TableCoreInternal };
 
 describe('TableComponent', () => {
+  beforeAll(() => {
+    // The table's layout, such as how resized columns keep their widths, comes from its global styles
+    const style = document.createElement('style');
+    style.textContent = forgeTableStyles;
+    document.head.append(style);
+  });
+
   beforeAll(() => {
     defineTableComponent();
   });
@@ -1721,6 +1731,22 @@ describe('TableComponent', () => {
       const resizeHandle = firstCell.querySelector(`.${TABLE_CONSTANTS.classes.TABLE_RESIZE_HANDLE}`);
 
       expect(resizeHandle).toBeNull();
+    });
+
+    it('should keep the resize handle width when the handle is hovered', async () => {
+      const harness = await createFixture();
+      harness.component.resizable = true;
+      harness.component.columnConfigurations = resizableColumns;
+
+      const firstCell = harness.getTableHeaderRow().cells.item(0) as HTMLTableHeaderCellElement;
+      const resizeHandle = getTableResizeHandle(harness.tableElement);
+      await userEvent.hover(firstCell);
+      const width = getComputedStyle(resizeHandle).borderRightWidth;
+      await userEvent.hover(resizeHandle);
+      await task(500);
+
+      expect(getComputedStyle(resizeHandle).cursor).toBe('col-resize');
+      expect(getComputedStyle(resizeHandle).borderRightWidth).toBe(width);
     });
 
     it('should resize columns when the resize handle is moved', async () => {
