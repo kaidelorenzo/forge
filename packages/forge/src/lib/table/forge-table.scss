@@ -64,11 +64,13 @@ forge-table {
     }
   }
 
+  // The filter and fixed header styles apply to this table's own header only, not to a table
+  // nested in one of its rows, such as an expanded row's content
   &--filter-visible {
-    .forge-table-head__row {
+    > thead > .forge-table-head__row {
       height: variables.$thead-filter-row-height;
 
-      .forge-table-head__cell {
+      > .forge-table-head__cell {
         border: none;
       }
     }
@@ -231,14 +233,12 @@ forge-table {
   &--fixed {
     @include fixed;
 
-    .forge-table-head__cell {
+    > thead > tr > .forge-table-head__cell {
       @include fixed-head-cell;
     }
 
-    .forge-table-head__row__filter {
-      .forge-table-head__cell {
-        top: variables.$thead-filter-row-height;
-      }
+    > thead > .forge-table-head__row__filter > .forge-table-head__cell {
+      top: variables.$thead-filter-row-height;
     }
   }
 }

@@ -20,6 +20,8 @@ import {
 import { TextFieldComponentDelegate } from '../text-field/index.js';
 import type { ITooltipComponent } from '../tooltip/index.js';
 
+import forgeTableStyles from './forge-table.scss?inline';
+
 import './table.js';
 
 const columns: IColumnConfiguration[] = [
@@ -60,6 +62,13 @@ type TableCoreInternal = ITableCore & {
 type TableComponentWithCore = ITableComponent & { _core: TableCoreInternal };
 
 describe('TableComponent', () => {
+  beforeAll(() => {
+    // The table's layout, such as how resized columns keep their widths, comes from its global styles
+    const style = document.createElement('style');
+    style.textContent = forgeTableStyles;
+    document.head.append(style);
+  });
+
   beforeAll(() => {
     defineTableComponent();
   });
@@ -1380,6 +1389,26 @@ describe('TableComponent', () => {
 
       harness.component.expandRow(0, '');
       expect(harness.component.isRowExpanded(0)).toBe(true);
+    });
+
+    it('should not apply the filter row styles to a table nested in an expanded row', async () => {
+      const harness = await createFixture();
+      harness.component.data = data;
+      harness.component.columnConfigurations = columns;
+      harness.component.filter = true;
+      harness.component.render();
+
+      const nested = document.createElement('forge-table') as ITableComponent;
+      nested.data = data;
+      nested.columnConfigurations = columns;
+      await harness.component.expandRow(0, nested);
+      await task();
+
+      const nestedHeadRow = nested.querySelector('thead > tr') as HTMLTableRowElement;
+      const filterRow = getLastTableHeaderRow(harness.tableElement);
+      expect(getComputedStyle(filterRow).height).toBe('32px');
+      expect(getComputedStyle(nestedHeadRow).height).not.toBe('32px');
+      expect(getComputedStyle(nestedHeadRow.cells[0]).borderBottomStyle).not.toBe('none');
     });
 
     it('should throw if table has not rendered and it expands a collapsed row', async () => {
