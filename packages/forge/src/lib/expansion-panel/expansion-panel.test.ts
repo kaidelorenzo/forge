@@ -449,6 +449,27 @@ describe('Expansion Panel', () => {
     });
   });
 
+  it('should clip the content element while animating', async () => {
+    const screen = render(html`
+      <forge-expansion-panel>
+        <button slot="header">Header</button>
+        <div style="height: 100px;">Content</div>
+      </forge-expansion-panel>
+    `);
+    const el = screen.container.querySelector('forge-expansion-panel') as ExpansionPanelComponent;
+    await task();
+    const contentEl = getContentElement(el);
+
+    el.toggle();
+    mockTransitionEvent(contentEl, 'start', 'grid-template-rows');
+    await task();
+    expect(getComputedStyle(contentEl).overflow).toBe('clip');
+
+    mockTransitionEvent(contentEl, 'end', 'grid-template-rows');
+    await task();
+    expect(getComputedStyle(contentEl).overflow).not.toBe('clip');
+  });
+
   describe('animation type', () => {
     it('should set animation type via attribute', async () => {
       const screen = render(html`<forge-expansion-panel animation-type="none"></forge-expansion-panel>`);

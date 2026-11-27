@@ -27,6 +27,10 @@
 .content {
   @include content;
 
+  &.animating {
+    @include content-animating;
+  }
+
   .inner {
     @include inner;
 

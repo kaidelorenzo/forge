@@ -34,6 +34,12 @@
   overflow: unset;
 }
 
+// Clipping only the inner element leaves the content's own box free to overflow while its row
+// grows, so a scrolling ancestor shows a scrollbar for a frame or two
+@mixin content-animating {
+  overflow: clip;
+}
+
 @mixin inner-animating {
   overflow: hidden;
 }

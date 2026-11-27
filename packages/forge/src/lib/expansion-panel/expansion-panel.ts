@@ -208,7 +208,7 @@ export class ExpansionPanelComponent extends BaseLitElement implements IExpansio
           <slot name="header"></slot>
         </div>
         <div
-          class=${classMap({ content: true, 'no-animation': this.animationType === 'none' })}
+          class=${classMap({ content: true, animating: this._isAnimating, 'no-animation': this.animationType === 'none' })}
           hidden=${!this.open && !this._isAnimating ? 'until-found' : nothing}
           part="content"
           @beforematch="${this.#handleBeforeMatch.bind(this)}"
