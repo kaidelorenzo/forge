@@ -380,6 +380,35 @@ describe('Structured Card', () => {
     });
   });
 
+  describe('padded body without a footer', () => {
+    it('should end a padded body with the same space as its sides', async () => {
+      const harness = await createFixture(html`<div slot="body">Body</div>`);
+
+      const bodyStyle = getComputedStyle(harness.scaffoldBodyElement);
+      expect(bodyStyle.paddingBlockEnd).toBe(bodyStyle.paddingInlineStart);
+      expect(bodyStyle.paddingBlockEnd).not.toBe(bodyStyle.paddingBlockStart);
+    });
+
+    it('should not add space to a padded body above a footer', async () => {
+      const harness = await createFixture(
+        html`<div slot="body">Body</div>
+          <button slot="footer-primary-action">Save</button>`
+      );
+
+      const bodyStyle = getComputedStyle(harness.scaffoldBodyElement);
+      expect(bodyStyle.paddingBlockEnd).toBe(bodyStyle.paddingBlockStart);
+    });
+
+    it('should not add space to a body without spacing', async () => {
+      const harness = await createFixture(html`<div slot="body">Body</div>`);
+
+      harness.element.bodySpacing = 'none';
+      await harness.element.updateComplete;
+
+      expect(getComputedStyle(harness.scaffoldBodyElement).paddingBlockEnd).toBe('0px');
+    });
+  });
+
   describe('conditional title margin', () => {
     it('should apply margin to title when before-title slot is empty', async () => {
       const harness = await createFixture();
@@ -463,6 +492,10 @@ class StructuredCardHarness extends TestHarness<IStructuredCardComponent> {
 
   public get titleElement(): HTMLElement {
     return getShadowElement(this.element, '#title') as HTMLElement;
+  }
+
+  public get scaffoldBodyElement(): HTMLElement {
+    return getShadowElement(this.contentScaffoldElement, '.body-inner') as HTMLElement;
   }
 
   public get footerActionsElement(): HTMLElement | null {

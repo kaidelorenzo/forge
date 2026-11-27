@@ -32,6 +32,11 @@ forge-content-scaffold {
   --forge-content-scaffold-body-height: var(--_structured-card-body-height);
 }
 
+// A padded body with no footer below it ends with the same space as its sides
+.no-footer {
+  --forge-content-scaffold-body-padding-block: #{spacing.variable(xxsmall)} #{spacing.variable(medium)};
+}
+
 .container {
   --forge-card-padding: 0;
   --forge-card-gap: 0;

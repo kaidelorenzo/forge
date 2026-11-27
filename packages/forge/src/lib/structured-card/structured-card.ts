@@ -94,7 +94,8 @@ export class StructuredCardComponent extends BaseLitElement implements IStructur
   public render(): TemplateResult {
     return html`
       <forge-card class="container">
-        <forge-content-scaffold>
+        <!-- Without a footer, a padded body ends with its own space instead of the footer's -->
+        <forge-content-scaffold class=${classMap({ 'no-footer': this.#footerHideRef.hidden && this.bodySpacing !== 'none' })}>
           <div slot=${this.#headerHideRef.hidden ? nothing : 'header'} class="header-container" ${hideWhenEmpty(this.#headerHideRef)}>
             <div class="title-container">
               <slot name="before-title" @slotchange=${this.#handleSlotChange}></slot>
