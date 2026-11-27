@@ -471,6 +471,12 @@ export class TabBarComponent extends BaseLitElement implements ITabBarComponent 
 
     this._activeTabElement = tab;
     this.#syncActiveTab();
+
+    // Keep the active tab properties in step with the tab the user selected
+    this.activeTab = this.#tabs.indexOf(tab);
+    if (tab.name) {
+      this.activeTabName = tab.name;
+    }
   }
 
   /**
@@ -580,6 +586,10 @@ export class TabBarComponent extends BaseLitElement implements ITabBarComponent 
     }
 
     const tabs = this.#tabs;
+    if (tabs[index] && tabs[index] === this._activeTabElement && tabs[index].active) {
+      // The tab is already selected, such as after the user selected it
+      return;
+    }
     if (index >= 0 && index < tabs.length) {
       this._activeTabElement = tabs[index];
       return this.#syncActiveTab();

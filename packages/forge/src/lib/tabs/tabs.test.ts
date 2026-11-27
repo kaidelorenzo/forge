@@ -491,6 +491,30 @@ describe('Tabs', () => {
     expect(changeSpy).not.toHaveBeenCalled();
   });
 
+  it('should update active tab when tab is clicked', async () => {
+    const ctx = await createFixture({ activeTab: 0 });
+    await ctx.clickTab(1);
+    expect(ctx.tabs[1].selected).toBe(true);
+    expect(ctx.element.activeTab).toBe(1);
+  });
+
+  it('should update active tab name when tab with a name is clicked', async () => {
+    const ctx = await createFixture({ activeTabName: 'first', tabNames: ['first', 'second', 'third'] });
+    await ctx.clickTab(1);
+    expect(ctx.element.activeTabName).toBe('second');
+    expect(ctx.element.activeTab).toBe(1);
+  });
+
+  it('should select tab when active tab is set back to its previous value after a click', async () => {
+    const ctx = await createFixture({ activeTab: 0 });
+    await ctx.clickTab(1);
+    ctx.element.activeTab = 0;
+    await frame();
+    expect(ctx.tabs[0].selected).toBe(true);
+    expect(ctx.tabs[1].selected).toBe(false);
+    expect(ctx.activeTabCount).toBe(1);
+  });
+
   it('should cancel change event', async () => {
     const ctx = await createFixture({ activeTab: 0 });
     const changeSpy = vi.fn(evt => evt.preventDefault());
