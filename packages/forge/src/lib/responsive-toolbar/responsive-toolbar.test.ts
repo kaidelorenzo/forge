@@ -127,6 +127,32 @@ describe('Responsive Toolbar', () => {
     await new Promise(resolve => setTimeout(resolve, 300));
     expect(spy).toHaveBeenCalledOnce();
   });
+
+  it('should set small state when its end content grows without the toolbar resizing', async () => {
+    const harness = await createFixture({ width: '900px' });
+    expect(harness.element.matches(':state(large)')).toBe(true);
+
+    const endLarge = harness.element.querySelector('[slot="end-large"]') as HTMLElement;
+    // Keep the toolbar's size, so only its content changes size
+    harness.element.style.height = `${harness.element.offsetHeight}px`;
+    endLarge.textContent = endLarge.textContent!.repeat(3);
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    expect(harness.element.matches(':state(small)')).toBe(true);
+  });
+
+  it('should set small state when its start content grows without the toolbar resizing', async () => {
+    const harness = await createFixture({ width: '1100px' });
+    expect(harness.element.matches(':state(large)')).toBe(true);
+
+    const start = harness.element.querySelector('[slot="start"]') as HTMLElement;
+    // Keep the toolbar's size, so only its content changes size
+    harness.element.style.height = `${harness.element.offsetHeight}px`;
+    start.textContent = start.textContent!.repeat(4);
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    expect(harness.element.matches(':state(small)')).toBe(true);
+  });
 });
 
 class ResponsiveToolbarHarness extends TestHarness<IResponsiveToolbarComponent> {

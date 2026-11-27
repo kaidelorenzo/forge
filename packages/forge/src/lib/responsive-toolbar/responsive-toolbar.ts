@@ -91,12 +91,20 @@ export class ResponsiveToolbarComponent extends BaseLitElement implements IRespo
     super.connectedCallback();
     this.#initializeThrottledResizeHandler();
     ForgeResizeObserver.observe(this, this.#handleResize);
+    if (this.hasUpdated) {
+      this.#observeContent();
+    }
   }
 
   public override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.#currentState = undefined;
     ForgeResizeObserver.unobserve(this);
+    this.#unobserveContent();
+  }
+
+  public override firstUpdated(): void {
+    this.#observeContent();
   }
 
   public override willUpdate(changedProperties: PropertyValues<this>): void {
@@ -130,6 +138,24 @@ export class ResponsiveToolbarComponent extends BaseLitElement implements IRespo
   #handleResize = (): void => {
     this.#throttledHandleResize?.();
   };
+
+  // The start and end content can change size while the toolbar keeps its own, such as a title
+  // that changes or end content that is shown or hidden, so their sizes are watched too
+  #observeContent(): void {
+    for (const container of [this.#startSlotContainer.value, this.#endSlotContainer.value]) {
+      if (container) {
+        ForgeResizeObserver.observe(container, this.#handleResize);
+      }
+    }
+  }
+
+  #unobserveContent(): void {
+    for (const container of [this.#startSlotContainer.value, this.#endSlotContainer.value]) {
+      if (container) {
+        ForgeResizeObserver.unobserve(container);
+      }
+    }
+  }
 
   #updateOverlapState(): void {
     const titleInlineEndEdge = this.#startSlotContainer.value?.getBoundingClientRect().right || 0;
