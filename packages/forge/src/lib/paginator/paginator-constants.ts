@@ -22,7 +22,8 @@ const attributes = {
 const selectors = {
   LABEL: '.label > slot[name=label]',
   PAGE_SIZE_SELECT: '.page-size-options',
-  RANGE_LABEL: '.range-label > slot[name=range-label]',
+  RANGE_LABEL: '.range-label-text > slot[name=range-label]',
+  RANGE_LABEL_SIZER: '.range-label-sizer',
   FIRST_PAGE_BUTTON: '.first-page',
   FIRST_PAGE_CONTAINER: '#first-page-container',
   PREVIOUS_PAGE_BUTTON: '.previous-page',

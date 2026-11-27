@@ -98,6 +98,7 @@ export class PaginatorComponent extends BaseLitElement implements IPaginatorComp
   #offset = 0;
   #rangeLabelCallback: PaginatorRangeLabelBuilder;
   #rangeLabel = '';
+  #widestRangeLabel = '';
   #initialized = false;
 
   /**
@@ -346,7 +347,8 @@ export class PaginatorComponent extends BaseLitElement implements IPaginatorComp
           </div>
           ${this.#renderPageSizeSelect()}
           <div class="range-label" part="range-label">
-            <slot name="range-label">${this.#rangeLabel}</slot>
+            <span class="range-label-sizer" aria-hidden="true">${this.#widestRangeLabel}</span>
+            <span class="range-label-text"><slot name="range-label">${this.#rangeLabel}</slot></span>
           </div>
         </div>
 
@@ -512,6 +514,7 @@ export class PaginatorComponent extends BaseLitElement implements IPaginatorComp
 
   #updateRangeLabel(): void {
     this.#rangeLabel = this.#computeRangeLabel();
+    this.#widestRangeLabel = this.#computeWidestRangeLabel();
     if (this.#initialized) {
       LiveAnnouncer.instance.announce(this.#rangeLabel, 'polite');
     }
@@ -537,6 +540,20 @@ export class PaginatorComponent extends BaseLitElement implements IPaginatorComp
       return `${pageStart}-${pageEnd} ${PAGINATOR_CONSTANTS.strings.RANGE_SEPARATOR_LABEL} ${this.#total}`;
     }
     return `${this.#pageIndex + 1} ${PAGINATOR_CONSTANTS.strings.RANGE_SEPARATOR_LABEL} ${this.#total}`;
+  }
+
+  /**
+   * The widest default range label for the current total, with every page number written as zeros:
+   * no page number has more digits than the total, and tabular figures make all digits equally wide.
+   * A custom range label (callback or slot) can be any width, so it reserves nothing.
+   */
+  #computeWidestRangeLabel(): string {
+    if (typeof this.#rangeLabelCallback === 'function') {
+      return '';
+    }
+    const zeros = '0'.repeat(String(this.#total).length);
+    const range = this.#pageSize > 1 ? `${zeros}-${zeros}` : zeros;
+    return `${range} ${PAGINATOR_CONSTANTS.strings.RANGE_SEPARATOR_LABEL} ${this.#total}`;
   }
 
   #syncPageSizeOptionsToSelect(): void {

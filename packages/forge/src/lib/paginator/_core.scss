@@ -25,6 +25,23 @@
   @include typography.style(label1);
 }
 
+// The range label and a hidden copy of the widest label for the current total share one grid
+// cell, so the label keeps the same width as the page changes and the controls beside it don't
+// shift. Tabular figures make every digit as wide as the zeros the widest label is built from.
+@mixin range-label {
+  display: inline-grid;
+  justify-items: end;
+  font-variant-numeric: tabular-nums;
+}
+
+@mixin range-label-layer {
+  grid-area: 1 / 1;
+}
+
+@mixin range-label-sizer {
+  visibility: hidden;
+}
+
 @mixin alternative-range-label {
   @include typography.style(body1);
 

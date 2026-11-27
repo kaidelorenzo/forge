@@ -598,6 +598,45 @@ describe('Paginator', () => {
     });
   });
 
+  describe('range label width', () => {
+    it('should reserve the width of the widest range label for the total', async () => {
+      const harness = await createFixture({ total: 13, pageSize: 5 });
+
+      expect(harness.rangeLabelSizerText).toBe('00-00 of 13');
+
+      harness.paginatorElement.pageIndex = 2;
+      await harness.paginatorElement.updateComplete;
+
+      expect(harness.rangeLabelText).toBe('11-13 of 13');
+      expect(harness.rangeLabelSizerText).toBe('00-00 of 13');
+    });
+
+    it('should follow the total', async () => {
+      const harness = await createFixture({ total: 100 });
+
+      harness.paginatorElement.total = 1000;
+      await harness.paginatorElement.updateComplete;
+
+      expect(harness.rangeLabelSizerText).toBe('0000-0000 of 1000');
+    });
+
+    it('should reserve no width for a custom range label', async () => {
+      const harness = await createFixture({ total: 100 });
+
+      harness.paginatorElement.rangeLabelCallback = (): string => 'Test';
+      await harness.paginatorElement.updateComplete;
+
+      expect(harness.rangeLabelSizerText).toBe('');
+    });
+
+    it('should hide the widest range label from assistive technology', async () => {
+      const harness = await createFixture({ total: 13, pageSize: 5 });
+
+      const sizer = getShadowElement(harness.paginatorElement, PAGINATOR_CONSTANTS.selectors.RANGE_LABEL_SIZER);
+      expect(sizer?.getAttribute('aria-hidden')).toBe('true');
+    });
+  });
+
   describe('rangeLabelCallback', () => {
     it('should set range label via callback property', async () => {
       const harness = await createFixture();
@@ -928,6 +967,10 @@ class PaginatorHarness {
 
   public get rangeLabelText(): string {
     return getShadowElement(this.paginatorElement, PAGINATOR_CONSTANTS.selectors.RANGE_LABEL)?.textContent ?? '';
+  }
+
+  public get rangeLabelSizerText(): string {
+    return getShadowElement(this.paginatorElement, PAGINATOR_CONSTANTS.selectors.RANGE_LABEL_SIZER)?.textContent ?? '';
   }
 
   public get alternativeRangeLabelText(): string {

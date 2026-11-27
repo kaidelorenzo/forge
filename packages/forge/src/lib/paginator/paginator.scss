@@ -30,6 +30,19 @@
   @include label-base;
 }
 
+.range-label {
+  @include range-label;
+}
+
+.range-label-text,
+.range-label-sizer {
+  @include range-label-layer;
+}
+
+.range-label-sizer {
+  @include range-label-sizer;
+}
+
 .actions {
   @include actions;
 }
