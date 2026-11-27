@@ -1423,6 +1423,40 @@ describe('TableComponent', () => {
       expect(harness.component.isRowExpanded(0)).toBe(false);
     });
 
+    it('should collapse a row whose expansion panel has not opened yet', async () => {
+      const harness = await createFixture();
+      harness.component.data = data;
+      harness.component.columnConfigurations = columns;
+      harness.component.render();
+
+      await harness.component.expandRow(0, '');
+      await harness.component.collapseRow(0);
+
+      expect(harness.component.isRowExpanded(0)).toBe(false);
+      expect(harness.tableElement.querySelectorAll(`.${TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDABLE_CONTENT}`).length).toBe(0);
+    });
+
+    it('should keep one expanded row when a collapsing row is expanded again', async () => {
+      const harness = await createFixture();
+      harness.component.data = data;
+      harness.component.columnConfigurations = columns;
+      harness.component.render();
+
+      await harness.component.expandRow(0, '');
+      await frame();
+      const collapsed = harness.component.collapseRow(0);
+      await harness.component.expandRow(0, '');
+      await task(500);
+
+      expect(harness.component.isRowExpanded(0)).toBe(true);
+      expect(harness.tableElement.querySelectorAll(`.${TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDABLE_CONTENT}`).length).toBe(1);
+
+      await harness.component.collapseRow(0);
+      await collapsed;
+      expect(harness.component.isRowExpanded(0)).toBe(false);
+      expect(harness.tableElement.querySelectorAll(`.${TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDABLE_CONTENT}`).length).toBe(0);
+    });
+
     it('should not collapse an expanded row if the table has not rendered', async () => {
       const harness = await createFixture();
       expect(harness.core._rendered).toBe(false);

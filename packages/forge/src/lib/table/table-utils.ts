@@ -1754,9 +1754,17 @@ export class TableUtils {
     const tbody = configuration.tableElement.tBodies[0];
     const nonExpandedRows = TableUtils._getNonExpandedRows(tbody.rows);
     const requestedRow = nonExpandedRows[rowIndex];
-    requestedRow.classList.add(TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDED);
-
     const actualRowIndex = Array.from(tbody.rows).indexOf(requestedRow);
+
+    // A row that is expanded, or still collapsing, already has its expanded row: open it again
+    // rather than adding another
+    const existingPanel = TableUtils._getExpansionPanel(tbody, requestedRow, actualRowIndex);
+    if (existingPanel) {
+      existingPanel.open = true;
+      return;
+    }
+
+    requestedRow.classList.add(TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDED);
     const expandedRow = tbody.insertRow(actualRowIndex + 1);
     addClass([TABLE_CONSTANTS.classes.TABLE_ROW, TABLE_CONSTANTS.classes.TABLE_BODY_ROW, TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDABLE_CONTENT], expandedRow);
 
@@ -1819,27 +1827,58 @@ export class TableUtils {
     const requestedRow = nonExpandedRows[rowIndex];
     const actualRowIndex = Array.from(tbody.rows).indexOf(requestedRow);
 
-    if (requestedRow && requestedRow.classList.contains(TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDED)) {
-      const expandableRow = tbody.rows[actualRowIndex + 1];
-      const expansionPanel = expandableRow.querySelector(EXPANSION_PANEL_CONSTANTS.elementName) as IExpansionPanelComponent;
-      if (expansionPanel && expansionPanel.open) {
-        const promise = new Promise<void>(resolve => {
-          expansionPanel.addEventListener(
-            EXPANSION_PANEL_CONSTANTS.events.ANIMATION_COMPLETE,
-            () => {
-              requestedRow.classList.remove(TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDED);
-              removeElement(expandableRow);
-              resolve();
-            },
-            { once: true }
-          );
-        });
-        expansionPanel.open = false;
-        return promise;
-      }
+    const expansionPanel = TableUtils._getExpansionPanel(tbody, requestedRow, actualRowIndex);
+    if (!expansionPanel) {
+      return Promise.resolve();
     }
 
-    return Promise.resolve();
+    const expandableRow = tbody.rows[actualRowIndex + 1];
+    const removeRow = (): void => {
+      requestedRow.classList.remove(TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDED);
+      removeElement(expandableRow);
+    };
+
+    // A row whose panel hasn't opened yet has nothing to animate
+    if (!expansionPanel.open) {
+      removeRow();
+      return Promise.resolve();
+    }
+
+    const promise = new Promise<void>(resolve => {
+      const onAnimationComplete = (): void => {
+        // The row was expanded again while it collapsed, so it stays
+        if (expansionPanel.open) {
+          return;
+        }
+        expansionPanel.removeEventListener(EXPANSION_PANEL_CONSTANTS.events.ANIMATION_COMPLETE, onAnimationComplete);
+        removeRow();
+        resolve();
+      };
+      expansionPanel.addEventListener(EXPANSION_PANEL_CONSTANTS.events.ANIMATION_COMPLETE, onAnimationComplete);
+    });
+    expansionPanel.open = false;
+    return promise;
+  }
+
+  /**
+   * Gets the expansion panel of a row's expanded row, when the row is expanded or still collapsing.
+   * @param tbody The table body.
+   * @param requestedRow The row.
+   * @param actualRowIndex The row's index among all the body's rows.
+   */
+  private static _getExpansionPanel(
+    tbody: HTMLTableSectionElement,
+    requestedRow: HTMLTableRowElement | undefined,
+    actualRowIndex: number
+  ): IExpansionPanelComponent | null {
+    if (!requestedRow || !requestedRow.classList.contains(TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDED)) {
+      return null;
+    }
+    const expandableRow = tbody.rows[actualRowIndex + 1];
+    if (!expandableRow || !expandableRow.classList.contains(TABLE_CONSTANTS.classes.TABLE_ROW_EXPANDABLE_CONTENT)) {
+      return null;
+    }
+    return expandableRow.querySelector(EXPANSION_PANEL_CONSTANTS.elementName) as IExpansionPanelComponent | null;
   }
 
   /**
